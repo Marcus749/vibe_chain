@@ -1,76 +1,359 @@
-# Club Treasury – VibeChain × MERAZ 7.0 (Round 1)
+# 🏛️ Club Treasury
+### VibeChain × MERAZ 7.0 | Round 1
 
-A decentralized treasury for a club, where **members decide by vote, the contract enforces the rules, and everything is publicly verifiable**. No admin, no owner, and the deployer has no special rights.
+<p align="center">
+  <strong>A decentralized treasury. Collective decisions. Complete transparency.</strong>
+</p>
 
-| | |
+<p align="center">
+  <img src="https://img.shields.io/badge/Network-Ethereum%20Sepolia-627EEA?style=for-the-badge&logo=ethereum&logoColor=white" />
+  <img src="https://img.shields.io/badge/Solidity-Smart%20Contracts-363636?style=for-the-badge&logo=solidity" />
+  <img src="https://img.shields.io/badge/Frontend-HTML%20%7C%20CSS%20%7C%20JS-E34F26?style=for-the-badge&logo=html5&logoColor=white" />
+  <img src="https://img.shields.io/badge/Web3-Ethers.js%20v6-2535A0?style=for-the-badge" />
+</p>
+
+<p align="center">
+  <a href="YOUR_VERCEL_URL">🚀 Live Demo</a> •
+  <a href="YOUR_CONTRACT_ADDRESS">📜 Smart Contract</a> •
+  <a href="docs/DESIGN.md">🛡️ Design & Threat Model</a>
+</p>
+
+---
+
+## 🌐 The Vision
+
+**What if club funds were controlled by everyone, instead of just one person?**
+
+Traditional club treasuries depend on a few individuals managing money through personal bank accounts, UPI transactions, and private group conversations.
+
+This creates a lack of transparency, accountability, and trust.
+
+**Club Treasury changes that.**
+
+We built a decentralized treasury where members collectively control club funds through on-chain voting. Every proposal, approval, and payment is recorded on Ethereum Sepolia.
+
+No administrator. No privileged deployer. No hidden authority.
+
+Just transparent, community-driven financial governance.
+
+---
+
+## ✨ Experience the Platform
+
+### 🖥️ Dashboard & Treasury Overview
+
+A centralized view of the club's financial activities, governance status, and treasury health.
+
+**Key dashboard experiences:**
+- Live treasury balance.
+- Total contributions and member count.
+- Active, passed, rejected, and executed proposals.
+- Recent treasury transactions.
+- Public read-only access without connecting a wallet.
+
+### 🗳️ Democratic Governance
+
+Members can create spending proposals with a recipient, amount, and purpose.
+
+Other eligible members can vote YES or NO.
+
+A proposal passes only when more than 50% of the members in its creation-time snapshot vote YES.
+
+### 💸 Transparent Transactions
+
+Every successful payment is associated with its approved proposal.
+
+Members and external observers can independently verify the transaction through the blockchain.
+
+### 🔐 Wallet Integration
+
+MetaMask connects members to the treasury.
+
+- Connect wallet to participate.
+- View membership eligibility.
+- Create proposals.
+- Vote on active proposals.
+- Execute approved transactions.
+- Read-only mode for visitors.
+
+---
+
+## 🎨 UI/UX Design Philosophy
+
+We designed the interface around three principles:
+
+| Principle | User experience |
 |---|---|
-| **Network** | Ethereum Sepolia |
-| **Contract address** | `<PASTE ADDRESS AFTER DEPLOY>` ([Etherscan](https://sepolia.etherscan.io/address/<ADDRESS>)) |
-| **Live demo** | `<PASTE VERCEL URL>` |
-| **Dev environment** | Antigravity |
+| Clarity | Important financial information is visible immediately. |
+| Simplicity | Voting and proposal creation require minimal steps. |
+| Transparency | Every important action has a verifiable on-chain record. |
 
-## 1. Problem we chose
+**Suggested visual direction:**
 
-Club money usually sits in one or two people's bank/UPI accounts. Decisions happen in private chats, so months later nobody can say who approved what or where the money went. We built a treasury that answers four questions a judge (or any member) can check on-chain:
+- Dark navy / charcoal background.
+- Electric blue and violet accents.
+- Emerald for approved transactions.
+- Red for rejected proposals.
+- Clean typography and generous spacing.
+- Responsive dashboard for desktop and mobile.
+- Interactive proposal cards with clear status indicators.
+- Confirmation dialogs before financial transactions.
 
-| Question | Answer |
+The interface should feel like a modern Web3 financial dashboard rather than a traditional banking application.
+
+---
+
+## ⚙️ How the System Works
+
+```mermaid
+flowchart TD
+    A[Member Connects Wallet] --> B[Create Spending Proposal]
+    B --> C[Proposal Stored On-chain]
+    C --> D[Eligible Members Vote]
+    D --> E{Strict Majority?}
+    E -->|Yes| F[Proposal Passed]
+    E -->|No| G[Proposal Rejected]
+    F --> H{Within Execution Window?}
+    H -->|Yes| I[Anyone Can Execute]
+    H -->|No| J[Proposal Expired]
+    I --> K[Funds Transferred]
+    K --> L[Spent Event Emitted]
+    L --> M[Dashboard Updates]
+```
+
+### The governance lifecycle
+
+| Status | Meaning |
 |---|---|
-| Who may do what? | **Anyone** can contribute and view. **Members** can propose, vote and leave. **Nobody** has admin powers. |
-| How is a money decision made? | A member proposes a spend with a stated purpose; members vote; more than half of the members must approve; then anyone can execute it once. |
-| Why can't one person misuse funds (even the deployer)? | The contract has no owner/admin/upgrade function. The deployer address isn't stored. Funds move only via an approved proposal, with a minimum of 3 members and a per-spend cap. |
-| What can a member verify afterwards? | Every proposal, vote, purpose and payment is on-chain (events and public state) and shown on the dashboard, which works with **no wallet** (read-only). |
+| 🟡 Active | Voting is in progress. |
+| 🟢 Passed | Required majority has approved. |
+| 🔵 Executed | Payment successfully completed. |
+| 🔴 Rejected | Proposal failed to receive the required approval. |
+| ⚪ Expired | Voting or execution deadline passed. |
+| ⚫ Cancelled | Proposal was cancelled under contract rules. |
 
-## 2. How it works
+---
 
-- **Treasury**: holds Sepolia ETH. Anyone can send funds via `contribute()` or a plain transfer; contributions are tracked per address.
-- **Membership**: ≥3 founders are fixed at deployment. After that members change **only by vote** (`AddMember` / `RemoveMember`) or by `leave()`. Membership can never drop below 3.
-- **Decisions**: one member = one vote. A proposal passes when YES > 50% of the members **at the time it was created** (snapshot). Members who joined later cannot vote on older proposals (prevents vote-stuffing).
-- **Lifecycle**: `Active → Passed → Executed`, or `Rejected / Expired / Cancelled`. Voting window is set at deploy (default 24h). A passed proposal must be executed within 2 days after voting ends.
-- **Accountability**: every proposal stores its purpose on-chain; every payment emits `Spent(proposalId, to, amount, purpose)`.
+## 🏗️ Architecture
 
-### Safety invariants (all covered by tests)
-1. **Never pays more than it holds**: balance is checked at execution, plus a cap per spend (default 50% of the treasury).
-2. **No authorisation moves funds more than it was granted for**: the approved amount is fixed in the proposal; `executed` is set before the transfer, so it can run once.
-3. **Rejected, expired, cancelled or unauthorised actions never move funds**: `execute` only works in the `Passed` state.
+```mermaid
+flowchart TB
+    U[Club Members]
+    V[MetaMask Wallet]
+    F[Frontend Dashboard]
+    E[Ethers.js v6]
+    R[Public Sepolia RPC]
+    C[ClubTreasury.sol]
+    B[Ethereum Sepolia]
 
-## 3. Architecture
-
+    U --> F
+    U --> V
+    V --> E
+    F --> E
+    F --> R
+    E --> C
+    R --> C
+    C --> B
 ```
-MetaMask ──► frontend (ethers v6, static) ──► ClubTreasury.sol (Sepolia)
-                 ▲ read-only dashboard via public RPC (no wallet needed)
-```
-- `contracts/ClubTreasury.sol` – the whole system (≈300 lines, 1 dependency: OpenZeppelin `ReentrancyGuard`).
-- `frontend/` – dependency-free static site (HTML/CSS/JS + pinned ethers).
-- `test/ClubTreasury.test.js` – unit and attack tests; `contracts/mocks/` – test-only attackers.
-- `docs/DESIGN.md` – design justification and threat model.
 
-## 4. Setup
+### Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Blockchain | Ethereum Sepolia |
+| Smart Contract | Solidity |
+| Security | OpenZeppelin ReentrancyGuard |
+| Wallet | MetaMask |
+| Web3 Integration | Ethers.js v6 |
+| Frontend | HTML, CSS, JavaScript |
+| Testing | Hardhat |
+| Development | Antigravity |
+| Deployment | Sepolia + Vercel |
+
+---
+
+## 🔒 Security & Governance Rules
+
+Security is built into the smart contract rather than depending on trust in an administrator.
+
+| Rule | Enforcement |
+|---|---|
+| Minimum membership | At least 3 members. |
+| Equal voting | One eligible member, one vote. |
+| Strict majority | YES votes must exceed 50% of the proposal snapshot. |
+| Voting snapshot | Membership is fixed for each proposal's voting threshold. |
+| Spending limit | Default maximum 50% of treasury balance. |
+| Execution protection | Approved amount is fixed and execution is one-time. |
+| Reentrancy protection | OpenZeppelin ReentrancyGuard. |
+| Execution deadline | Passed proposals expire after the 2-day grace period. |
+| No privileged deployer | No owner or administrator role. |
+
+**Important:** The contract does not guarantee protection against every possible collusion or economic attack. Review `docs/DESIGN.md` for the threat model and limitations.
+
+---
+
+## 🧪 Testing & Validation
+
+Our test suite covers normal operations and adversarial scenarios.
+
+- [x] Contribution and balance tracking.
+- [x] Proposal creation.
+- [x] Voting eligibility.
+- [x] Majority validation.
+- [x] Membership changes.
+- [x] Minimum membership enforcement.
+- [x] Spending cap enforcement.
+- [x] Insufficient balance protection.
+- [x] Duplicate execution prevention.
+- [x] Reentrancy attack protection.
+- [x] Expired and rejected proposal protection.
+
+---
+
+## 🚀 Run Locally
+
+### 1. Clone the repository
+
+```bash
+git clone YOUR_GITHUB_REPOSITORY_URL
+cd club-treasury
+```
+
+### 2. Install dependencies
 
 ```bash
 npm install
-cp .env.example .env     # throwaway Sepolia wallet; set FOUNDERS (3+ addresses)
-npm test                 # all tests must pass
-npm run deploy:sepolia   # prints address, writes frontend/config.js + deployment.json
-npm run serve            # http://localhost:5173
 ```
 
-**Live demo (Vercel):** `cd frontend && npx vercel --prod` (static site, no build step). Commit the updated `frontend/config.js` first.
+### 3. Configure environment
 
-**Demoing alone?** Add 3 founder accounts to MetaMask (or use 3 teammates); 2 of 3 approve a proposal.
+```bash
+cp .env.example .env
+```
 
-## 5. Design choices and justification
+Configure your throwaway Sepolia deployment wallet and at least three founder addresses in `.env`.
 
-| Choice | Why |
+Never commit private keys or secret credentials.
+
+### 4. Run tests
+
+```bash
+npm test
+```
+
+### 5. Deploy to Sepolia
+
+```bash
+npm run deploy:sepolia
+```
+
+This deploys the contract and updates the frontend configuration and deployment metadata.
+
+### 6. Start the frontend
+
+```bash
+npm run serve
+```
+
+Open:
+
+```text
+http://localhost:5173
+```
+
+### 7. Deploy the frontend
+
+```bash
+cd frontend
+npx vercel --prod
+```
+
+Update and commit `frontend/config.js` with the deployed contract address before publishing.
+
+---
+
+## 📂 Project Structure
+
+```text
+club-treasury/
+│
+├── contracts/
+│   ├── ClubTreasury.sol
+│   └── mocks/
+│
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   ├── app.js
+│   └── config.js
+│
+├── test/
+│   └── ClubTreasury.test.js
+│
+├── docs/
+│   └── DESIGN.md
+│
+├── .env.example
+├── hardhat.config.js
+├── package.json
+└── README.md
+```
+
+---
+
+## 🔗 Deployment Information
+
+| Detail | Information |
 |---|---|
-| No owner/admin; deployer not recorded | Meets "no backdoors": the deployer has exactly the same power as any stranger |
-| ≥3 founders, never fewer than 3 members | With 1–2 members, one person *is* the club; a minimum of 3 keeps "majority" meaningful |
-| Strict majority of a **snapshot** | Fixed target per proposal; later joins or leaves can't swing an open vote |
-| Join/leave rights recorded per proposal id | A newly added member can't vote on proposals created earlier |
-| Per-spend cap (% of treasury) | Even a colluding majority can't empty the treasury in one transaction |
-| Purpose string stored on-chain | Each outflow is tied to a reason and to the decision that authorised it |
-| Anyone can execute | Liveness: a passed decision doesn't depend on one person showing up |
-| Expiry (voting + 2 days grace) | Old approvals can't be used months later |
-| Direct payout with `nonReentrant` + state-before-call | Simple and auditable; a failing recipient only reverts its own execution and funds stay safe |
-| Read-only dashboard through public RPC | Outsiders can verify without installing a wallet |
+| Blockchain | Ethereum Sepolia |
+| Contract | `YOUR_DEPLOYED_CONTRACT_ADDRESS` |
+| Explorer | [View on Sepolia Etherscan](YOUR_ETHERSCAN_URL) |
+| Frontend | [Launch Live Dashboard](YOUR_VERCEL_URL) |
+| Development | Antigravity |
 
-See `docs/DESIGN.md` for the threat model and limitations.
+*Deployment links will be updated after successful deployment.*
+
+---
+
+## 🎬 Demo Scenario
+
+Want to understand how the treasury works?
+
+Try this three-member governance demonstration:
+
+1. Connect three founder wallets.
+2. Create a spending proposal from Wallet A.
+3. Wallets B and C vote YES.
+4. Observe the proposal reach the Passed state.
+5. Execute the proposal using any account.
+6. Verify the transaction on Sepolia Etherscan.
+7. Open the dashboard without connecting a wallet and inspect the transaction history.
+
+**The important part:** The deployer is not required to approve, authorize, or execute the payment.
+
+---
+
+## 🌍 Why It Matters
+
+Club Treasury is more than a smart contract that stores ETH.
+
+It demonstrates how blockchain can improve the way communities manage shared resources.
+
+- **Trust through code:** Rules are enforced automatically.
+- **Democracy through voting:** Financial decisions belong to members.
+- **Transparency through blockchain:** Every payment is publicly verifiable.
+- **Accountability through records:** Every spending decision has a purpose and an approval history.
+
+Our goal is simple:
+
+**Make collective money management transparent, democratic, and accessible.**
+
+---
+
+<p align="center">
+  <strong>🏛️ Club Treasury</strong>
+  <br/>
+  Built for VibeChain × MERAZ 7.0
+  <br/>
+  <em>Community-owned. Blockchain-powered. Transparently governed.</em>
+</p>
