@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Club Treasury · Live Simulator</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f6f8;--panel:#fff;--ink:#0f1a24;--muted:#58697a;--line:#d5dde5;--accent:#0b6b50;--aink:#fff;--ok:#0b6b50;--bad:#b3261e;--warn:#935d00;--info:#2a4fb8;color-scheme:light dark}
+:root[data-theme="dark"]{--bg:#0d1620;--panel:#15212d;--ink:#e7eef5;--muted:#94a6b8;--line:#293a4a;--accent:#3fb58d;--aink:#06120d;--ok:#52c79c;--bad:#ff8078;--warn:#e6b84c;--info:#8aa7ff;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1620;--panel:#15212d;--ink:#e7eef5;--muted:#94a6b8;--line:#293a4a;--accent:#3fb58d;--aink:#06120d;--ok:#52c79c;--bad:#ff8078;--warn:#e6b84c;--info:#8aa7ff}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--panel);z-index:10}
+.bar0{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:.6rem clamp(1rem,4vw,3rem)}
+.brand{font:600 1.1rem Georgia,"Times New Roman",serif}.pill{border:1px solid var(--warn);color:var(--warn);border-radius:999px;padding:.05rem .7rem;font-size:.8rem}
+.ctl{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+select,input,button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:6px;padding:.4rem .65rem;min-width:0}
+button{cursor:pointer}button.primary{background:var(--accent);color:var(--aink);border-color:var(--accent);font-weight:600}
+select{background:var(--panel)}option{color:#000}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.banner{margin:.8rem clamp(1rem,4vw,3rem) 0;padding:.65rem 1rem;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+.banner.pending{border-color:var(--info)}.banner.ok{border-color:var(--ok)}.banner.bad{border-color:var(--bad)}
+.hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:2rem;align-items:end;padding:1.2rem clamp(1rem,4vw,3rem) 1.5rem}
+.label{margin:0;color:var(--muted);font-size:.9rem}
+.balance{margin:.1rem 0;font:600 clamp(2.6rem,8vw,4.6rem)/1.05 Georgia,"Times New Roman",serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.balance small{font-size:.35em;color:var(--muted);font-weight:400}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem 1.5rem;margin:0}.stats div{border-top:1px solid var(--line);padding-top:.35rem}
+dt{font-size:.82rem;color:var(--muted)}dd{margin:0;font-size:1.2rem;font-variant-numeric:tabular-nums}
+main{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:1rem;padding:0 clamp(1rem,4vw,3rem) 3rem;align-items:start}
+.col{display:grid;gap:1rem;min-width:0}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.1rem}
+h2{margin:0 0 .7rem;font-size:1.05rem}h3{margin:1rem 0 .4rem;font-size:.95rem}
+label{display:grid;gap:.2rem;font-size:.85rem;color:var(--muted);margin-bottom:.55rem}
+.muted{color:var(--muted)}.list{list-style:none;margin:0;padding:0;display:grid;gap:.55rem}
+.addr{font:.82rem ui-monospace,Menlo,Consolas,monospace;color:var(--muted);overflow-wrap:anywhere}
+.item{border:1px solid var(--line);border-radius:8px;padding:.7rem .85rem;display:grid;gap:.3rem}.row{display:flex;justify-content:space-between;gap:.6rem;align-items:center;flex-wrap:wrap}
+.tag{font-size:.78rem;border:1px solid currentColor;border-radius:4px;padding:0 .4rem}
+.tag.Active{color:var(--info)}.tag.Passed{color:var(--warn)}.tag.Executed{color:var(--ok)}.tag.Rejected,.tag.Expired,.tag.Cancelled{color:var(--muted)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}
+.actions{display:flex;gap:.5rem;flex-wrap:wrap}.in{color:var(--ok)}.out{color:var(--bad)}
+.atk{display:grid;gap:.45rem}.atk button{text-align:left}
+.rules{margin:0;padding-left:1.1rem;display:grid;gap:.3rem}
+@media (max-width:860px){.hero,main{grid-template-columns:1fr}}
+</style></head><body>
+<div class="bar0">
+ <div class="ctl"><span class="brand">Club Treasury</span><span class="pill">Simulated chain · not Sepolia</span></div>
+ <div class="ctl"><label style="margin:0;display:flex;gap:.4rem;align-items:center">Wallet <select id="acct"></select></label>
+ <span class="muted">Clock: <b id="clock"></b></span><span class="ctl" id="time"></span></div>
+</div>
+<div id="banner" class="banner" role="status" aria-live="polite" hidden></div>
+<section class="hero"><div><p class="label">Treasury balance</p><p class="balance"><span id="balance">0</span> <small>ETH</small></p>
+<div class="ctl"><button id="demo" class="primary">Run guided demo</button><button id="reset">Reset</button></div></div>
+<dl class="stats"><div><dt>Received, all time</dt><dd id="recv"></dd></div><div><dt>Spent, all time</dt><dd id="spent"></dd></div><div><dt>Members</dt><dd id="mcount"></dd></div><div><dt>Proposals</dt><dd id="pcount"></dd></div></dl></section>
+<main><div class="col">
+<section class="panel"><h2>How this treasury works</h2><ul class="rules">
+<li>No owner, admin or deployer powers. Dev deployed it and has no more rights than a stranger.</li>
+<li>Members change only by member vote (or leaving). The club never drops below 3 members.</li>
+<li>One member, one vote. A proposal passes with more than half of the members it was created with.</li>
+<li>Voting lasts 1 hour here. Approved decisions can be run by anyone, once, within 2 days; then they expire.</li>
+<li>One spend can take at most 50% of the treasury and never more than it holds.</li></ul></section>
+<section class="panel"><h2>Decisions</h2><p id="pempty" class="muted">No proposals yet. Switch to a founder and propose one, or run the guided demo.</p><ul class="list" id="props"></ul></section>
+<section class="panel"><h2>Money in and out</h2><p id="lempty" class="muted">No money has moved yet.</p><ul class="list" id="ledger"></ul></section>
+<section class="panel"><h2>Transaction log</h2><p id="tempty" class="muted">Every wallet action appears here, including rejected ones.</p><ul class="list" id="log"></ul></section>
+</div><aside class="col">
+<section class="panel"><h2>Members</h2><ul class="list" id="members"></ul><p></p><button id="leave" hidden>Leave the club</button></section>
+<section class="panel"><h2>Add funds</h2><label>Amount (ETH)<input id="c-amt" inputmode="decimal" placeholder="0.5"></label><button id="c-btn" class="primary">Contribute</button></section>
+<section class="panel" id="mact"><h2>Propose a decision</h2><h3>Spend funds</h3>
+<label>Recipient<select id="s-to"></select></label><label>Amount (ETH)<input id="s-amt" inputmode="decimal" placeholder="1"></label><label>Purpose<input id="s-pur" maxlength="200" placeholder="Pizza for the hackathon"></label><button id="s-btn" class="primary">Propose spend</button>
+<h3>Add a member</h3><label>Who<select id="a-addr"></select></label><label>Reason<input id="a-pur" maxlength="200" placeholder="Joins as treasurer"></label><button id="a-btn">Propose member</button>
+<h3>Remove a member</h3><label>Who<select id="r-addr"></select></label><label>Reason<input id="r-pur" maxlength="200" placeholder="Inactive"></label><button id="r-btn">Propose removal</button></section>
+<p id="nomem" class="muted" hidden>This wallet is not a member. It can view and contribute, but not propose or vote.</p>
+<section class="panel"><h2>Attack lab</h2><p class="muted">Try to break the rules. Each attempt should fail.</p><div class="atk">
+<button id="k1">Deployer proposes a spend</button><button id="k2">Outsider runs an unapproved proposal</button><button id="k3">Re-run a paid proposal to be paid twice</button><button id="k4">Majority tries to drain the whole treasury</button><button id="k5">Shrink the club below 3 members</button></div>
+<p class="muted">Reentrancy and failing recipients are covered by the Solidity tests, not by this simulator.</p></section>
+</aside></main>
+<script>
+// ===== Simulated ClubTreasury (mirrors contracts/ClubTreasury.sol; amounts in milli-ETH) =====
+const AC={a:'Asha',b:'Bilal',c:'Chen',d:'Dev',e:'Esha',f:'Farid'};
+const ROLE={a:'founder',b:'founder',c:'founder',d:'deployer, not a member',e:'outsider',f:'vendor'};
+const S={now:1767225600,VP:3600,GRACE:172800,CAP:5000,MIN:3,MAXM:100,PURPOSE:200};
+const KINDS=['Spend','Add member','Remove member'];
+const ERR={NotMember:'Only members can do this.',NotEligible:'This member joined after the proposal was created, so cannot vote on it.',NoSuchProposal:'That proposal does not exist.',InvalidAddress:'That address is not allowed here.',ZeroAmount:'Amount must be above zero.',InvalidPurpose:'A purpose of 1–200 characters is required.',AlreadyMember:'That address is already a member.',NotAMember:'That address is not a member.',BelowMinMembers:'The club must keep at least 3 members.',AlreadyVoted:'This member already voted.',VotingEnded:'Voting on this proposal has ended.',Closed:'This proposal is already closed.',NotExecutable:'Not approved, or expired, rejected, cancelled or already run.',InsufficientBalance:'The treasury does not hold enough.',ExceedsSpendCap:'More than a single spend may take from the treasury (50%).',NotProposer:'Only the proposer can cancel.',InsufficientFunds:'Your wallet does not have enough ETH.'};
+let nonce=0;
+function reset(){Object.assign(S,{members:['a','b','c'],elig:{a:0,b:0,c:0},bal:0,recv:0,spent:0,contrib:{},props:[],votes:{},ledger:[],log:[],wallet:{a:50000,b:50000,c:50000,d:100000,e:50000,f:0}});}
+reset();
+class Rv extends Error{constructor(n){super(n);this.n=n}}
+const rv=(c,n)=>{if(!c)throw new Rv(n)};
+const isM=k=>S.members.includes(k);
+const P=id=>{rv(id>=1&&id<=S.props.length,'NoSuchProposal');return S.props[id-1]};
+function status(p){
+  if(p.executed)return'Executed'; if(p.cancelled)return'Cancelled';
+  if(p.yes*2>p.snap)return S.now<=p.deadline+S.GRACE?'Passed':'Expired';
+  if(S.now>p.deadline)return'Expired';
+  if((p.snap-p.no)*2<=p.snap)return'Rejected';
+  return'Active';
+}
+function contribute(s,v){rv(v>0,'ZeroAmount');rv(S.wallet[s]>=v,'InsufficientFunds');S.wallet[s]-=v;S.bal+=v;S.recv+=v;S.contrib[s]=(S.contrib[s]||0)+v;S.ledger.push({k:'in',who:s,amt:v,t:S.now});return'Contributed '+v/1000+' ETH'}
+function create(s,kind,target,amount,purpose){
+  rv(isM(s),'NotMember');
+  if(kind===0){rv(!!target&&target!=='T','InvalidAddress');rv(amount>0,'ZeroAmount')}
+  if(kind===1){rv(!!target,'InvalidAddress');rv(!isM(target),'AlreadyMember')}
+  if(kind===2){rv(isM(target),'NotAMember')}
+  rv(purpose.length>=1&&purpose.length<=S.PURPOSE,'InvalidPurpose');
+  const id=S.props.length+1;
+  S.props.push({id,kind,proposer:s,target,amount:kind===0?amount:0,purpose,created:S.now,deadline:S.now+S.VP,snap:S.members.length,yes:0,no:0,executed:false,cancelled:false});
+  return id;
+}
+function vote(s,id,sup){
+  rv(isM(s),'NotMember');const p=P(id);rv(id>S.elig[s],'NotEligible');
+  rv(!p.executed&&!p.cancelled,'Closed');rv(S.now<=p.deadline,'VotingEnded');rv(!S.votes[id+s],'AlreadyVoted');
+  S.votes[id+s]=sup?1:2;if(sup)p.yes++;else p.no++;return'Voted '+(sup?'yes':'no')+' on #'+id;
+}
+function cancel(s,id){const p=P(id);rv(s===p.proposer,'NotProposer');rv(!p.executed&&!p.cancelled,'Closed');p.cancelled=true;return'Cancelled #'+id}
+function execute(s,id){
+  const p=P(id);rv(status(p)==='Passed','NotExecutable');
+  if(p.kind===0){rv(p.amount<=S.bal,'InsufficientBalance');rv(p.amount*10000<=S.bal*S.CAP,'ExceedsSpendCap');
+    p.executed=true;S.bal-=p.amount;S.spent+=p.amount;S.wallet[p.target]+=p.amount;S.ledger.push({k:'out',who:p.target,amt:p.amount,id,purpose:p.purpose,t:S.now});return'Paid '+p.amount/1000+' ETH to '+AC[p.target]}
+  if(p.kind===1){rv(!isM(p.target),'AlreadyMember');p.executed=true;S.members.push(p.target);S.elig[p.target]=S.props.length;return AC[p.target]+' joined'}
+  rv(isM(p.target),'NotAMember');rv(S.members.length>S.MIN,'BelowMinMembers');
+  p.executed=true;S.members=S.members.filter(m=>m!==p.target);return AC[p.target]+' removed';
+}
+function leave(s){rv(isM(s),'NotMember');rv(S.members.length>S.MIN,'BelowMinMembers');S.members=S.members.filter(m=>m!==s);return AC[s]+' left'}
+function runNow(label,who,fn){
+  const hash='0x'+(0x9e3779b1+(++nonce)*7919).toString(16).padStart(8,'0')+'…';
+  try{const val=fn();S.log.unshift({t:S.now,label,who,ok:true,msg:typeof val==='string'?val:'',hash});return{ok:true,val}}
+  catch(e){if(!(e instanceof Rv))throw e;S.log.unshift({t:S.now,label,who,ok:false,msg:e.n+': '+ERR[e.n],hash,err:e.n});return{ok:false,err:e.n}}
+}
+// ===== UI =====
+let acct='a',busy=false;
+const $=id=>document.getElementById(id);
+function h(t,c,x){const n=document.createElement(t);if(c)n.className=c;if(x!==undefined)n.textContent=x;return n}
+const lab=k=>AC[k]+' · 0x'+k.repeat(4)+'…'+k.repeat(4);
+const eth=v=>String(+(v/1000).toFixed(3));
+const when=t=>new Date(t*1000).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+const toM=v=>{const x=Math.round(parseFloat(v)*1000);return isFinite(x)&&x>0?x:0};
+function banner(kind,text){const b=$('banner');b.hidden=!text;b.className='banner '+kind;b.textContent=text||''}
+function send(label,who,fn){
+  if(busy)return;busy=true;banner('pending','Pending: '+label+' — confirm in the wallet, then waiting for the block…');
+  setTimeout(()=>{const r=runNow(label,who,fn);busy=false;
+    banner(r.ok?'ok':'bad',r.ok?'Success: '+label:'Failed: '+label+' — '+ERR[r.err]);render()},650);
+}
+function opts(sel,keys,keep){const v=sel.value;sel.replaceChildren(...keys.map(k=>{const o=h('option','',AC[k]+' ('+ROLE[k]+')');o.value=k;return o}));if(keys.includes(v))sel.value=v;else if(keep&&keys.includes(keep))sel.value=keep}
+function render(){
+  const accSel=$('acct');accSel.replaceChildren(...Object.keys(AC).map(k=>{const o=h('option','',AC[k]+' — '+ROLE[k]+' — '+eth(S.wallet[k])+' ETH');o.value=k;return o}));accSel.value=acct;
+  $('clock').textContent=when(S.now);
+  $('balance').textContent=eth(S.bal);$('recv').textContent=eth(S.recv)+' ETH';$('spent').textContent=eth(S.spent)+' ETH';
+  $('mcount').textContent=S.members.length;$('pcount').textContent=S.props.length;
+  const ml=$('members');ml.replaceChildren(...S.members.map(k=>h('li','addr',lab(k)+(k===acct?'  (you)':''))));
+  const mem=isM(acct);$('mact').hidden=!mem;$('nomem').hidden=mem;$('leave').hidden=!(mem&&S.members.length>S.MIN);
+  opts($('s-to'),['f','e','a','b','c','d'],'f');opts($('a-addr'),Object.keys(AC).filter(k=>!isM(k)),'e');opts($('r-addr'),S.members);
+  // proposals
+  const pl=$('props');pl.replaceChildren();$('pempty').hidden=S.props.length>0;
+  [...S.props].reverse().forEach(p=>{
+    const st=status(p),li=h('li','item'),hd=h('div','row');
+    hd.append(h('strong','','#'+p.id+' · '+KINDS[p.kind]),h('span','tag '+st,st));li.append(hd,h('div','',p.purpose));
+    li.append(h('div','addr',p.kind===0?'Pay '+eth(p.amount)+' ETH to '+AC[p.target]:(p.kind===1?'Add ':'Remove ')+AC[p.target]));
+    li.append(h('div','addr','Proposed by '+AC[p.proposer]));
+    const need=Math.floor(p.snap/2)+1;
+    li.append(h('div','muted','Yes '+p.yes+' · No '+p.no+' · '+need+' of '+p.snap+' yes votes needed · voting ends '+when(p.deadline)));
+    const bar=h('div','bar'),f=document.createElement('i');f.style.width=Math.min(100,p.yes/need*100)+'%';bar.append(f);li.append(bar);
+    const acts=h('div','actions'),open=st==='Active'||st==='Passed',vt=S.votes[p.id+acct];
+    if(mem&&open&&!vt&&p.id>S.elig[acct]&&S.now<=p.deadline){
+      const y=h('button','primary','Vote yes');y.onclick=()=>send('Vote yes on #'+p.id,acct,()=>vote(acct,p.id,true));
+      const n=h('button','','Vote no');n.onclick=()=>send('Vote no on #'+p.id,acct,()=>vote(acct,p.id,false));acts.append(y,n)}
+    if(vt)acts.append(h('span','muted','You voted '+(vt===1?'yes':'no')+'.'));
+    if(st==='Passed'){const x=h('button','primary','Run this decision');x.onclick=()=>send('Execute #'+p.id,acct,()=>execute(acct,p.id));acts.append(x)}
+    if(open&&p.proposer===acct){const c=h('button','','Cancel');c.onclick=()=>send('Cancel #'+p.id,acct,()=>cancel(acct,p.id));acts.append(c)}
+    if(acts.childNodes.length)li.append(acts);pl.append(li)});
+  // ledger
+  const ll=$('ledger');ll.replaceChildren();$('lempty').hidden=S.ledger.length>0;
+  [...S.ledger].reverse().forEach(e=>{const li=h('li','item');
+    li.append(e.k==='in'?h('div','in','+'+eth(e.amt)+' ETH from '+AC[e.who]):h('div','out','−'+eth(e.amt)+' ETH to '+AC[e.who]));
+    if(e.k==='out')li.append(h('div','','Decision #'+e.id+': '+e.purpose));li.append(h('div','addr',when(e.t)));ll.append(li)});
+  // tx log
+  const tl=$('log');tl.replaceChildren();$('tempty').hidden=S.log.length>0;
+  S.log.slice(0,40).forEach(e=>{const li=h('li','item');const r=h('div','row');
+    r.append(h('span','',AC[e.who]+': '+e.label),h('span','tag '+(e.ok?'Executed':'Rejected'),e.ok?'Success':'Failed'));li.append(r);
+    if(e.msg)li.append(h('div',e.ok?'muted':'out',e.msg));li.append(h('div','addr','tx '+e.hash+' · '+when(e.t)));tl.append(li)});
+}
+// ---- wiring ----
+$('acct').onchange=e=>{acct=e.target.value;banner('',''); render()};
+[['+1 hour',3600],['+1 day',86400],['+3 days',259200]].forEach(([t,s])=>{const b=h('button','',t);b.onclick=()=>{S.now+=s;render()};$('time').append(b)});
+$('c-btn').onclick=()=>{const v=toM($('c-amt').value);if(!v)return banner('bad','Failed: enter a valid ETH amount.');send('Contribute '+eth(v)+' ETH',acct,()=>contribute(acct,v))};
+$('s-btn').onclick=()=>{const v=toM($('s-amt').value),p=$('s-pur').value.trim(),to=$('s-to').value;if(!v)return banner('bad','Failed: enter a valid ETH amount.');send('Propose spend',acct,()=>create(acct,0,to,v,p))};
+$('a-btn').onclick=()=>{const t=$('a-addr').value;send('Propose adding '+AC[t],acct,()=>create(acct,1,t,0,$('a-pur').value.trim()))};
+$('r-btn').onclick=()=>{const t=$('r-addr').value;send('Propose removing '+AC[t],acct,()=>create(acct,2,t,0,$('r-pur').value.trim()))};
+$('leave').onclick=()=>send('Leave the club',acct,()=>leave(acct));
+$('reset').onclick=()=>{reset();S.now=1767225600;acct='a';banner('','');render()};
+$('demo').onclick=()=>{
+  runNow('Contribute 10 ETH','d',()=>contribute('d',10000));
+  const id=runNow('Propose: pay Farid 2 ETH for hackathon prizes','a',()=>create('a',0,'f',2000,'Hackathon prizes')).val;
+  runNow('Vote yes on #'+id,'a',()=>vote('a',id,true));runNow('Vote yes on #'+id,'b',()=>vote('b',id,true));
+  runNow('Execute #'+id,'d',()=>execute('d',id));banner('ok','Guided demo done: 2 of 3 members approved, then anyone ran it. See Decisions and Money in and out.');render()};
+function note(t){banner('bad',t)}
+$('k1').onclick=()=>send('ATTACK: deployer proposes a spend','d',()=>create('d',0,'d',5000,'Deployer wants the money'));
+$('k2').onclick=()=>{const p=[...S.props].reverse().find(p=>['Active','Rejected'].includes(status(p)));if(!p)return note('Create a proposal first.');send('ATTACK: Esha executes unapproved #'+p.id,'e',()=>execute('e',p.id))};
+$('k3').onclick=()=>{const p=S.props.find(p=>p.executed&&p.kind===0);if(!p)return note('Run a spend first (try the guided demo).');send('ATTACK: re-run executed #'+p.id+' to be paid twice','d',()=>execute('d',p.id))};
+$('k4').onclick=()=>{if(!S.bal)return note('Fund the treasury first.');
+  const id=runNow('ATTACK: two members propose paying Farid the whole treasury','a',()=>create('a',0,'f',S.bal,'Totally legit')).val;
+  runNow('Vote yes on #'+id,'a',()=>vote('a',id,true));runNow('Vote yes on #'+id,'b',()=>vote('b',id,true));
+  const r=runNow('Execute #'+id+' (drain attempt)','d',()=>execute('d',id));banner(r.ok?'ok':'bad',r.ok?'Executed.':'Blocked even with a majority: '+ERR[r.err]);render()};
+$('k5').onclick=()=>{if(S.members.length!==S.MIN||!isM('c'))return note('Needs exactly 3 members, including Chen.');
+  const id=runNow('ATTACK: remove Chen to shrink the club below 3','a',()=>create('a',2,'c',0,'Shrink')).val;
+  runNow('Vote yes on #'+id,'a',()=>vote('a',id,true));runNow('Vote yes on #'+id,'b',()=>vote('b',id,true));
+  const r=runNow('Execute #'+id,'d',()=>execute('d',id));banner(r.ok?'ok':'bad',r.ok?'Executed.':'Blocked: '+ERR[r.err]);render()};
+render();
+</script></body></html>
